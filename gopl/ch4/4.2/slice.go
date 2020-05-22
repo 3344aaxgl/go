@@ -39,6 +39,9 @@ func appendInt(x []int, y int) []int {
 
 func main() {
 	a := [...]int{0, 1, 2, 3, 4, 5}
+	b := a
+	b[0] = 1
+	fmt.Println(b)
 	reverse(a[:])
 	fmt.Println(a)
 	fmt.Println("----------------")
