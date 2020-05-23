@@ -61,3 +61,56 @@ Map是底层为哈希表的键值对容器，其中key必须是支持==比较运
 # 6. 结构体
 
 如果结构体的全部成员都是可以比较的，那么结构体也是可以比较的。拥有匿名成员可以直接访问匿名成员的属性而不用给出完整路径
+
+# 7. 函数
+
+Go和C一样，不支持重载。如果两个函数参数列表和返回值列表中的变量类型一一对应，那么这两个函数被认为有相同的类型和标识符。go的函数可以有多个返回值。
+
+# 8. 函数值
+
+函数值类似函数指针，可以作为变量来创建，赋值，可以与nil比较，但函数值之间不可以比较，也不能当作map的key
+
+# 9. 匿名函数
+
+匿名函数类似lambda表达式.下面这个例子很有意思。首先类似lambda表达式，可以访问外部变量，但lambda表达式需要指明可以访问的外部变量，是传值，还是引用。函数值记录的变量的地址。然后是这个x变量没有在第一次调用函数值后被释放，变量的生命周期不由它的作用域决定。这也说明函数值不仅仅是一串代码，还记录了状态，也是函数值属于引用类型且不可比较
+
+```go
+package main
+
+import "fmt"
+
+func squares() func() int {
+	var x int
+	return func() int {
+		x++
+		return x * x
+	}
+}
+
+func main() {
+	f := squares()
+	fmt.Println(f()) //1
+	fmt.Println(f()) //4
+	fmt.Println(f()) //9
+	fmt.Println(f()) //16
+}
+```
+
+函数值记录的是外部变量的地址导致的一个坑
+
+```go
+	var rmdirs []func()
+	for _, d := range tempDirs() {
+		dir := d               // NOTE: necessary!
+		os.MkdirAll(dir, 0755) // creates parent directories too
+		rmdirs = append(rmdirs, func() {
+			os.RemoveAll(dir)
+		})
+	}
+	// ...do some work…
+	for _, rmdir := range rmdirs {
+		rmdir() // clean up
+	}
+```
+
+这里必须在for循环内对变量d进行一次拷贝，os.RemoveAll中记录的是dir的地址，而其中存储的是最后一个目录
